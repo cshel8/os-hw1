@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homework 1: The Machine and Its Manager: answers of Connor Sheldon</title>
+<style>body{font:15px/1.55 system-ui,sans-serif;max-width:860px;margin:24px auto;padding:0 16px;color:#151c2c;background:#fff}h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.15rem;margin:28px 0 8px;border-bottom:2px solid #d9deea;padding-bottom:4px}.meta{color:#69738c;margin:0 0 16px}.a{margin:0 0 14px}.q{margin:0 0 4px;color:#3d4760;font-size:.92rem}pre{white-space:pre-wrap;word-wrap:break-word;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#f5f7fb;border:1px solid #d9deea;border-radius:6px;padding:8px 10px;margin:0}.empty{color:#b45309;margin:0}table{border-collapse:collapse;font:13px ui-monospace,Menlo,Consolas,monospace}th,td{border:1px solid #d9deea;padding:4px 8px;text-align:left}th{background:#f5f7fb}</style>
+</head>
+<body>
+<h1>Homework 1: The Machine and Its Manager</h1>
+<p class="meta">Answers of <b>Connor Sheldon</b> · saved 10/10/2026, 1:31:30 AM</p>
+<h2>Problem 1Trace a program through the registers</h2>
+<div class="a"><p class="q">(a) Fill in every register&#39;s value after each stage finishes, in hex (three digits for the PC and MAR, four for the others).</p>
+<table><tr><th></th><th>PC</th><th>IR</th><th>AC</th><th>MAR</th><th>MBR</th></tr>
+<tr><th>Fetch 1</th><td>251</td><td>13A0</td><td>0000</td><td>250</td><td>13A0</td></tr>
+<tr><th>Execute 1</th><td>251</td><td>13A0</td><td>0019</td><td>3A0</td><td>0019</td></tr>
+<tr><th>Fetch 2</th><td>252</td><td>53A1</td><td>0019</td><td>251</td><td>53A1</td></tr>
+<tr><th>Execute 2</th><td>252</td><td>53A1</td><td>0027</td><td>3A1</td><td>000E</td></tr>
+<tr><th>Fetch 3</th><td>253</td><td>53A2</td><td>0027</td><td>252</td><td>53A2</td></tr>
+<tr><th>Execute 3</th><td>253</td><td>53A2</td><td>0020</td><td>3A2</td><td>8007</td></tr>
+<tr><th>Fetch 4</th><td>254</td><td>23A3</td><td>0020</td><td>253</td><td>23A3</td></tr>
+<tr><th>Execute 4</th><td>254</td><td>23A3</td><td>0020</td><td>3A3</td><td>0020</td></tr>
+<tr><th>Fetch 5</th><td>255</td><td>0000</td><td>0020</td><td>254</td><td>0000</td></tr>
+<tr><th>Execute 5 (halt)</th><td>255</td><td>0000</td><td>0020</td><td>254</td><td>0000</td></tr>
+</table>
+</div>
+<div class="a"><p class="q">(b) What does word 3A3 hold when the machine halts, in hex and in decimal? In one sentence, what calculation did the program perform?</p>
+<pre>The program calculates 25 + 14 - 7 = 32 and stores the result (0020 in hexadecimal) at memory address 3A3 before halting.</pre>
+</div>
+<div class="a"><p class="q">(c) Count the memory reads and the memory writes during the whole run, from the first fetch through the halt. Instruction fetches count as reads. Say which reads are fetches and which are operand reads.</p>
+<pre>The program performs 8 memory reads and 1 memory write. Of the 8 reads, 5 are instruction fetches and 3 are operand reads from the LOAD and two ADD instructions. The single memory write occurs when the STORE instruction saves the result at address 3A3.</pre>
+</div>
+<div class="a"><p class="q">(d) While the first instruction is executing, the PC already holds 251, not 250. Explain why the processor adds 1 to the PC during the fetch rather than after the execute. Then name one situation in which the value the PC was given during the fetch gets replaced before the next fetch.</p>
+<pre>The PC increments during fetch so it already points to the next instruction while the current instruction is executing. This allows the processor to continue sequentially without updating the PC after execution. However, a branch or jump instruction can replace the PC&#39;s value with a different address before the next fetch.</pre>
+</div>
+<div class="a"><p class="q">(e) A redesigned machine uses 24-bit words, with a 6-bit opcode and an 18-bit address in every instruction. How many different opcodes can it have, and how many memory words can one instruction name directly? Show the powers of two.</p>
+<pre>The machine can support 2^6 = 64 different opcodes because the opcode field contains 6 bits. The 18-bit address field allows each instruction to directly reference 2^18 = 262,144 memory words, with addresses ranging from 0 to 262,143.</pre>
+</div>
+<h2>Problem 2What interrupts buy, and what they cannot</h2>
+<div class="a"><p class="q">(a) Programmed I/O. After starting each print, the processor checks the printer&#39;s status over and over until the record is done, and only then continues. How long does the whole run take, from the start until the 12th record has printed? What percentage of that time does the processor spend waiting?</p>
+<pre>Each loop takes 6 ms of computing and 4 ms of waiting, for a total of 10 ms. Since the program runs 12 times, the total execution time is 12 x 10 = 120 ms. The processor spends 12 x 4 = 48 ms waiting, which is (48 / 120) x 100 = 40% of the total time.</pre>
+</div>
+<div class="a"><p class="q">(b) Interrupt-driven I/O. After starting a print, the program goes straight back to computing. When the printer finishes, it sends an interrupt; the handler uses 0.5 ms of processor time and then the interrupted computation carries on. Because 4 ms is less than 6 ms, each print finishes during the next round of computing, so the program never waits. How long until the 12th record has printed and its interrupt has been handled? Hint: first work out the time between the start of one print and the start of the next.</p>
+<pre>With interrupt driven I/O, the time between print starts is 6 + 0.5 = 6.5 ms. The first print starts after 6 ms, so the 12th print starts at 6 + (11 x 6.5) = 77.5 ms. Adding the final 4 ms of printing and 0.5 ms for the interrupt gives a total execution time of 82 ms.</pre>
+</div>
+<div class="a"><p class="q">(c) Now the printer is slower: 9 ms per record. Still using interrupts, a new print cannot start until the previous record has finished and its interrupt has been handled, so the program sometimes has to wait. What is the time between the starts of two prints now? In a typical loop (any loop except the last), how long does the processor sit with nothing to do? How long does the whole run take, until the 12th record has printed and its interrupt has been handled,, and how does that compare with programmed I/O on this slower printer?</p>
+<pre>The time between print starts is 9 + 0.5 = 9.5 ms. Since the professor computes for 6 ms while the printer takes 9 ms, it sits idle for 9 - 6 = 3 ms during a typical loop. The total execution time is 6 + (11 x 9.5) + 9 + 0.5 = 120 ms. With programmed I/O, the total would be 12 x (6 + 9) = 180 ms, so interrupt driven I/O saves 60 ms.</pre>
+</div>
+<div class="a"><p class="q">(d) In part (c) the processor still sits idle every loop, even with interrupts. Name the technique from Chapter 2 that puts that idle time to use, and explain in two or three sentences how it would do so in this situation.</p>
+<pre>The technique is multiprogramming, which allows the operating systems to run another program while the current program is waiting for I/O. In this situation, the processor could use the 3 ms of idle time to work on another program instead of sitting idle while the printer finishes. Once the printer sends its interrupt, the operating system can handle it and resume the original program when appropriate.</pre>
+</div>
+<h2>Problem 3How fast is memory, really?</h2>
+<div class="a"><p class="q">(a) A two-level memory has a cache with an access time of 2 ns and a main memory with an access time of 50 ns. Find the average access time when the cache hit ratio is 0.80, when it is 0.95 and when it is 0.99.</p>
+<pre>The average access time is calculated using 2 + (1 - hit ratio) × 50.
+- At a hit ratio of 0.80: 2 + (0.20 × 50) = 12 ns.
+- At a hit ratio of 0.95: 2 + (0.05 × 50) = 4.5 ns.
+- At a hit ratio of 0.99: 2 + (0.01 × 50) = 2.5 ns.
+As the cache hit ratio increases, the average access time decreases because the processor needs to access main memory less often.</pre>
+</div>
+<div class="a"><p class="q">(b) For the same two-level memory, what is the lowest hit ratio that brings the average access time down to 3 ns? Show the algebra.</p>
+<pre>Using the average access time formula, 3 = 2 + (1 - h) x 50. Subtracting 2 gives 1 = 50(1 - h), and dividing by 50 gives 0.02 = 1 - h. Solving for h gives 0.98, so the minimum cache hit ratio needed to reach an average access time of 3 ns is 98%.</pre>
+</div>
+<div class="a"><p class="q">(c) A three-level system has an L1 cache (1 ns, hit ratio 0.90), an L2 cache (8 ns, which finds 75% of the words that L1 misses) and main memory (60 ns, which always has the word). Find the average access time. Then find it again for the same system with the L2 cache removed, and say how many times faster the version with L2 is.</p>
+<pre>The L1 cache has a 90% hit rate, leaving 10% of requests to check L2. Of those requests, 75% are found in L2 and the remaining 25% require main memory. The average access time is (0.90 x 1) + (0.10 x 0.75 x 9) + (0.10 x 0.25 x 69) = 0.90 + 0.675 + 1.725 = 3.3 ns. Without the L2 cache, the average access time would be 1 + (0.10 x 60) = 7 ns. Comparing the two systems, 7 / 3.3 ≈ 2.12, so the version with L2 is approximately 2.12 times faster.</pre>
+</div>
+<div class="a"><p class="q">(d) Real programs routinely reach hit ratios above 0.9, even though the cache holds only a tiny fraction of memory. Name the property of programs that makes this possible, name its two kinds, and give an example of each from ordinary code (a loop, an array, a variable, a function call).</p>
+<pre>The property is locality of reference, which includes temporal locality and spatial locality. Temporal locality means a program is likely to access the same memory location again soon, such as repeatedly using a variable inside a loop. Spatial locality means a program is likely to access nearby memory locations, such as when reading elements of an array in order. These patterns allow a small cache to maintain a high hit ratio.</pre>
+</div>
+<h2>Problem 4Inside a direct-mapped cache</h2>
+<div class="a"><p class="q">(a) How many bits are in the word field, the slot field and the tag field? Explain where each width comes from.</p>
+<pre>The world field requires 3 bits because each block contains 8 words (2^3 = 8). The slot field requires 5 bits because the cache has 32 slots (2^5 = 32). Since memory addresses are 16 bits long, the remaining 16 - 3 -5 = 8 bits are used for the tag field. This gives a total of 8 tag bits, 5 slot bits, and 3 word bits.</pre>
+</div>
+<div class="a"><p class="q">(b) The cache starts empty and the processor reads these addresses (hex) in this order. For each, give the word, slot and tag fields (in decimal) and say whether the read is a hit or a miss.</p>
+<table><tr><th></th><th>Word</th><th>Slot</th><th>Tag</th><th>Hit or miss</th></tr>
+<tr><th>04A0</th><td>0</td><td>20</td><td>4</td><td>Miss</td></tr>
+<tr><th>04A7</th><td>7</td><td>20 </td><td>4</td><td>Hit</td></tr>
+<tr><th>14A2</th><td>2</td><td>20</td><td>20</td><td>Miss</td></tr>
+<tr><th>04A1</th><td>1</td><td>20</td><td>4</td><td>Miss</td></tr>
+<tr><th>14A3</th><td>3</td><td>20</td><td>20</td><td>Miss</td></tr>
+</table>
+</div>
+<div class="a"><p class="q">(c) How many of the five reads hit under direct mapping? If the same cache were fully associative with LRU replacement, how many would hit? Explain the difference in terms of which slots the blocks are allowed to use.</p>
+<pre>Under direct mapping, only 1 of the 5 reads is a cache hit because both memory blocks map to slot 20 and keep replacing each other. Under fully associative mapping with LRU, 3 of the 5 reads are hits because the two blocks can be stored in different cache slots. Since the cache has enough space for both blocks, no replacement is necessary.</pre>
+</div>
+<div class="a"><p class="q">(d) A program updates two different words of the same cached block 200 times each, and then the block is evicted. How many times is main memory written for that block under write-through, and how many under write-back? Then suppose that, under write-back and before the eviction, a DMA module reads that block straight from main memory. What does it get, and why is that a problem?</p>
+<pre>Under write-through, main memory is written 400 times because both words are updated 200 times each, and every update is written immediately. Under write-back, main memory is written only once when the modified block is evicted. If a DMA module reads the block directly from main memory before the write-back occurs, it receives outdated data because the latest changes are still only in the cache. This creates a cache coherence problem since the DMA module does not receive the most recent values.</pre>
+</div>
+<h2>Problem 5Three ways to move a block of data</h2>
+<div class="a"><p class="q">(a) Programmed I/O: the processor waits for each word, reads it from the I/O module and writes it to memory itself. How much processor time does the transfer use?</p>
+<pre>With programmed I/O, the processor waits for each word and transfers it into main memory itself. Since there are 4,096 words and each takes 2 µs, the total processor time is 4,096 x 2 = 8,192 µs (8.192 ms). The processor is occupied for the entire transfer.</pre>
+</div>
+<div class="a"><p class="q">(b) Interrupt-driven I/O: the device interrupts once per word, and each interrupt costs 0.6 µs of processor time (save state, move the word, restore state). How much processor time does the transfer use, and what percentage of the 8,192 µs is that?</p>
+<pre>With interrupt-driven I/O, each of the 4,096 words causes one interrupt that takes 0.6 µs of processor time. The total processor time is 4,096 x 0.6 = 2,457.6 µs. The percentage of the total transfer time is (2,457.6 / 8,192) x 100 = 30%. This means the processor spends 30% of the transfer time handling interrupts and can use the remaining time for other work.</pre>
+</div>
+<div class="a"><p class="q">(c) DMA: the processor spends 10 µs programming the DMA module and 5 µs in the one completion interrupt. How much processor time does the transfer use? The DMA module also borrows the bus for 0.05 µs per word (cycle stealing). What is the most that cycle stealing can delay the processor over the whole transfer, and why is a stolen cycle not the same thing as an interrupt?</p>
+<pre>With DMA, the processor spends 10 µs setting up the transfer and 5 µs handling the completion interrupt, for a total of 15 µs of processor time. Cycle stealing can delay the processor by up to 4,096 × 0.05 = 204.8 µs if the processor needs the memory bus during every transfer. A stolen cycle is different from an interrupt because it only temporarily delays the processor&#39;s access to the memory bus, while an interrupt requires the processor to stop its current execution and run an interrupt handler.</pre>
+</div>
+<div class="a"><p class="q">(d) Pick the most sensible technique for each device and give a one-line reason: a keyboard on a laptop; copying a 4 GB video file from an SSD; a toaster&#39;s temperature sensor read by a tiny processor that has no other work to do.</p>
+<pre>Keyboard on a laptop — Interrupt-driven I/O: The keyboard sends an interrupt when input is available, allowing the processor to perform other tasks instead of constantly checking for key presses.
+
+Copying a 4 GB video file from an SSD — DMA: DMA is best for large transfers because it moves data directly between the device and main memory with minimal processor involvement.
+
+Toaster&#39;s temperature sensor — Programmed I/O: The processor has no other work to do, so it can simply check the sensor repeatedly without needing interrupts or DMA.</pre>
+</div>
+<h2>Problem 6Keeping the processor busy</h2>
+<div class="a"><p class="q">(a) Suppose every program spends 75% of its time waiting for I/O, and the waits of different programs are independent. With n programs in memory, the processor is idle only when all n are waiting at once, so utilization = 1 − 0.75n. Find the utilization for n = 1, 2 and 4. Then find the smallest n that reaches at least 90%, and check your answer by computing the utilization for that n and for n − 1. Give utilizations to two decimal places and do not round before comparing with 90%.</p>
+<pre>Using the formula U = 1 - 0.75^n:
+
+n = 1: U = 1 - 0.75 = 25.00%
+n = 2: U = 1 - 0.75² = 43.75%
+n = 4: U = 1 - 0.75⁴ = 68.36%
+
+To reach at least 90% utilization:
+
+1 - 0.75^n ≥ 0.90
+
+0.75^n ≤ 0.10
+
+n ≥ ln(0.10) / ln(0.75) ≈ 8.0039
+
+Since n must be a whole number, the minimum is 9 programs.
+
+Checking both values:
+
+n = 8: U = 1 - 0.75⁸ = 89.99%
+n = 9: U = 1 - 0.75⁹ = 92.49%
+
+Therefore, 9 programs are needed to reach at least 90% processor utilization.</pre>
+</div>
+<div class="a"><p class="q">(b) Three jobs are submitted at time 0.</p>
+<table><tr><th></th><th>Elapsed time</th><th>Mean response time</th><th>Throughput (jobs per hour)</th><th>Processor utilization</th></tr>
+<tr><th>Uniprogramming</th><td>27 minutes</td><td>17 minutes</td><td>6.67</td><td>24.44%</td></tr>
+<tr><th>Multiprogramming</th><td>12 minutes</td><td>9 minutes</td><td>15</td><td>55.00%</td></tr>
+</table>
+</div>
+<div class="a"><p class="q">(b) Three jobs are submitted at time 0.</p>
+<pre>Total CPU time = (6 × 0.60) + (12 × 0.10) + (9 × 0.20) = 6.6 minutes.
+
+Uniprogramming:
+- Elapsed time = 6 + 12 + 9 = 27 minutes.
+- Mean response time = (6 + 18 + 27) / 3 = 17 minutes.
+- Throughput = (3 / 27) × 60 = 6.67 jobs/hour.
+- Processor utilization = (6.6 / 27) × 100 = 24.44%.
+
+Multiprogramming:
+- Elapsed time = 12 minutes because all three jobs run concurrently without slowing each other down.
+- Mean response time = (6 + 12 + 9) / 3 = 9 minutes.
+- Throughput = (3 / 12) × 60 = 15 jobs/hour.
+- Processor utilization = (6.6 / 12) × 100 = 55.00%.</pre>
+</div>
+<div class="a"><p class="q">(c) Multiprogramming only works safely and efficiently because of hardware features covered in Chapters 1 and 2. Name two of them and explain in a sentence each what that feature does for a multiprogrammed operating system.</p>
+<pre>1. Interrupts: Interrupts allow the operating system to respond when an I/O operation finishes, so the processor can work on another program instead of waiting.
+
+2. Memory protection: Memory protection prevents programs from accessing or modifying each other&#39;s memory, allowing multiple programs to remain in memory safely.</pre>
+</div>
+<h2>Problem 7How available is the service?</h2>
+<div class="a"><p class="q">(a) What is the server&#39;s availability, as a percentage to three decimal places?</p>
+<pre>Using the availability formula, A = MTTF / (MTTF + MTTR) = 1500 / (1500 + 5) = 1500 / 1505 ≈ 0.99667774. Multiplying by 100 gives an availability of 99.668%.</pre>
+</div>
+<div class="a"><p class="q">(b) How many hours per year can users expect the server to be down?</p>
+<pre>Expected annual downtime = 8,760 × (1 - availability) = 8,760 × (1 - 1500/1505) = 8,760 × (5/1505) ≈ 29.10 hours per year.</pre>
+</div>
+<div class="a"><p class="q">(c) Keeping the same MTTF, what is the longest MTTR that still reaches &quot;four nines&quot; (99.99%)? Give it in minutes.</p>
+<pre>Using the availability formula, 0.9999 = 1500 / (1500 + MTTR). Rearranging gives MTTR = (1500 / 0.9999) - 1500 ≈ 0.150015 hours. Converting to minutes gives 0.150015 × 60 ≈ 9.001 minutes. Therefore, the maximum MTTR to achieve 99.99% availability is approximately 9 minutes.</pre>
+</div>
+<div class="a"><p class="q">(d) The company runs two identical servers, and the service stays up as long as at least one of them works. If failures are independent, the pair&#39;s availability is 1 − (1 − A)2. Compute it as a percentage to four decimal places. Which of the three kinds of redundancy is this?</p>
+<pre>Using the availability of one server, A = 1500 / 1505, the availability of two independent servers is:
+
+A_pair = 1 - (1 - A)^2
+
+A_pair = 1 - (1 - 1500/1505)^2
+
+A_pair = 1 - (5/1505)^2 ≈ 0.9999889626
+
+Multiplying by 100 gives 99.9989% availability. The two-server system is more reliable because the service only becomes unavailable when both servers are down at the same time.</pre>
+</div>
+<h2>Problem 8The operating system&#39;s powers and its shape</h2>
+<div class="a"><p class="q">(a) Which of these instructions must be privileged, so that they run only in kernel mode? For each one, answer yes or no, and give the reason: for a yes, what could an ordinary program do with it; for a no, why it is safe or even necessary for ordinary programs.</p>
+<table><tr><th></th><th>Privileged? (yes / no)</th><th>Reason</th></tr>
+<tr><th>Set the timer&#39;s countdown value</th><td>Yes</td><td>A program could change the timer to prevent the OS from regaining control of the processor.</td></tr>
+<tr><th>Read the time-of-day clock</th><td>No</td><td>Reading the clock does not change system settings and is safe for ordinary programs.</td></tr>
+<tr><th>Disable interrupts</th><td>Yes</td><td>A program could stop the processor from responding to interrupts, interfering with the OS.</td></tr>
+<tr><th>Load the memory-protection (bounds) registers</th><td>Yes</td><td>A program could change its memory limits and access protected memory.</td></tr>
+<tr><th>Start an I/O operation on the disk</th><td>Yes</td><td>A program could bypass the OS and access or overwrite disk data directly.</td></tr>
+<tr><th>Add two registers</th><td>No</td><td>Addition is a normal operation that programs need and does not require kernel privileges.</td></tr>
+<tr><th>Make a system call (trap into the OS)</th><td>No</td><td>Programs need a safe way to request OS services, and the system call provides controlled access.</td></tr>
+</table>
+</div>
+<div class="a"><p class="q">(b) Each complaint below comes from users of one era of operating-system history. Name the era it comes from and the development that fixed it.</p>
+<table><tr><th></th><th>Era</th><th>What fixed it</th></tr>
+<tr><th>1</th><td>Serial processing</td><td>Simple batch processing introduced a resident monitor that automatically loaded and ran jobs, reducing wasted computer time.</td></tr>
+<tr><th>2</th><td>Simple batch processing</td><td>Mulitprogrammed batch processing allowed the processor to run another job while the current job waited for I/O.</td></tr>
+<tr><th>3</th><td>Mulitprogrammed batch processing</td><td>Time sharing systems allowed users to interact with their programs through terminals and receive faster responses.</td></tr>
+</table>
+</div>
+<div class="a"><p class="q">(c) A bug in a printer driver makes it write over memory it does not own. On a system with a monolithic kernel, the whole operating system crashes. Would the same bug crash a microkernel system? Explain what the microkernel design does differently, and name one cost of that design.</p>
+<pre>The same bug would not normally crash the entire microkernel system because device drivers run as separate processes in user space instead of directly inside the kernel. If the printer driver tries to overwrite memory it does not own, memory protection can stop it, so the driver may crash without bringing down the whole operating system. One disadvantage of a microkernel is the additional overhead from communication between separate processes, which can make some operations slower.</pre>
+</div>
+<div class="a"><p class="q">(d) On a multicore computer, two cores become free at the same instant and both run the scheduler, which takes the first process off one shared ready queue. What can go wrong? Which of the design issues for multiprocessor and multicore operating systems does this show? Say what the operating system must do about it.</p>
+<pre>If both cores access the shared ready queue at the same time, they could select the same process or corrupt the queue. This is a race condition and demonstrates the need for synchronization and mutual exclusion in multicore operating systems. The operating system must protect access to the shared queue using a lock or another synchronization mechanism so only one core can remove a process at a time.</pre>
+</div>
+<h2>B3Write the missing pieces</h2>
+<div class="a"><p class="q">B-a Paste the output of python machine.py --check.</p>
+<pre>self-check passed: LOAD, ADD, STORE, HALT, the interrupt stage and IRET all behave correctly</pre>
+</div>
+<div class="a"><p class="q">B-b Paste the complete output of python machine.py (both runs).</p>
+<pre>Problem 1 program, no interrupts
+step  stage      PC    IR    AC  MAR   MBR
+   1  fetch     251  13A0  0000  250  13A0
+   2  execute   251  13A0  0019  3A0  0019
+   3  fetch     252  53A1  0019  251  53A1
+   4  execute   252  53A1  0027  3A1  000E
+   5  fetch     253  53A2  0027  252  53A2
+   6  execute   253  53A2  0020  3A2  8007
+   7  fetch     254  23A3  0020  253  23A3
+   8  execute   254  23A3  0020  3A3  0020
+   9  fetch     255  0000  0020  254  0000
+  10  execute   255  0000  0020  254  0000
+memory reads: 8   memory writes: 1
+word 3A3 = 0020 (32)
+
+Problem 1 program, timer interrupt after instruction 2, safe handler
+step  stage      PC    IR    AC  MAR   MBR
+   1  fetch     251  13A0  0000  250  13A0
+   2  execute   251  13A0  0019  3A0  0019
+   3  fetch     252  53A1  0019  251  53A1
+   4  execute   252  53A1  0027  3A1  000E
+   5  interrupt 100  53A1  0027  000  0252
+   6  fetch     101  2001  0027  100  2001
+   7  execute   101  2001  0027  001  0027
+   8  fetch     102  10F0  0027  101  10F0
+   9  execute   102  10F0  0000  0F0  0000
+  10  fetch     103  50F1  0000  102  50F1
+  11  execute   103  50F1  0001  0F1  0001
+  12  fetch     104  20F0  0001  103  20F0
+  13  execute   104  20F0  0001  0F0  0001
+  14  fetch     105  1001  0001  104  1001
+  15  execute   105  1001  0027  001  0027
+  16  fetch     106  F000  0027  105  F000
+  17  execute   252  F000  0027  000  0252
+  18  fetch     253  53A2  0027  252  53A2
+  19  execute   253  53A2  0020  3A2  8007
+  20  fetch     254  23A3  0020  253  23A3
+  21  execute   254  23A3  0020  3A3  0020
+  22  fetch     255  0000  0020  254  0000
+  23  execute   255  0000  0020  254  0000
+memory reads: 18   memory writes: 4
+word 3A3 = 0020 (32)   ticks counted = 1</pre>
+</div>
+<div class="a"><p class="q">B-c Compare the first trace with your table from Problem 1(a), row by row. If any row differs, say which row, which value was right and what the mistake was. If they all match, say which row you found hardest by hand and why. Leave your Problem 1(a) answer as you first wrote it; this is where corrections belong.</p>
+<pre>All 10 rows from my original Problem 1(a) table match the simulator output, so no corrections were needed. The hardest row to calculate by hand was Step 6 (Execute 3) because it involved adding a negative number stored in sign-magnitude format. I had to recognize that 8007 represented -7, add it to 39, and convert the result of 32 back to 0020.</pre>
+</div>
+<div class="a"><p class="q">B-d In the interrupt run, the interrupt stage saved 0252 into word 000. Why 252, and not 251, the address of the instruction that had just finished? Then compare the memory-read and memory-write totals of the two runs: how many extra reads and writes did the one interrupt cost?</p>
+<pre>The PC saved 252 instead of 251 because the program counter automatically advances to the next instruction during the fetch stage. Since instruction 251 had already finished executing when the interrupt occurred, the processor needed to save 252 so the program could resume without repeating an instruction.
+
+Without interrupts, the simulator performed 8 memory reads and 1 memory write. With the interrupt, it performed 18 memory reads and 4 memory writes.
+
+Extra reads: 18 - 8 = 10
+
+Extra writes: 4 - 1 = 3
+
+Therefore, the interrupt added 10 memory reads and 3 memory writes, for a total of 13 additional memory operations.</pre>
+</div>
+<div class="a"><p class="q">B-e Paste the last line of python machine.py --broken. Explain step by step why word 3A3 ends up with that value instead of 0020. Which two instructions of the careful handler prevent this, and what does this show about who is responsible for saving which registers when an interrupt happens?</p>
+<pre>word 3A3 = 8006 (-6)   ticks counted = 1
+
+The incorrect result occurs because the broken interrupt handler does not save and restore the accumulator. Before the interrupt, the AC contains 0027 (39). The handler loads the timer count of 0, adds 1, and leaves the AC containing 0001 (1). When the original program resumes, it adds -7 to 1 instead of 39, resulting in -6. This value is stored in memory address 3A3 as 8006 instead of 0020 (32).
+
+The careful handler prevents this by using STORE 001 (2001) to save the original accumulator value and LOAD 001 (1001) to restore it before returning. This demonstrates that the interrupt hardware saves the program counter, while the interrupt handler is responsible for saving and restoring the registers it modifies.</pre>
+</div>
+<script type="application/json" id="answer-data">{"hw":"os-hw1","answers":{"__name":"Connor Sheldon","p1a":[["251","13A0","0000","250","13A0"],["251","13A0","0019","3A0","0019"],["252","53A1","0019","251","53A1"],["252","53A1","0027","3A1","000E"],["253","53A2","0027","252","53A2"],["253","53A2","0020","3A2","8007"],["254","23A3","0020","253","23A3"],["254","23A3","0020","3A3","0020"],["255","0000","0020","254","0000"],["255","0000","0020","254","0000"]],"p1b":"The program calculates 25 + 14 - 7 = 32 and stores the result (0020 in hexadecimal) at memory address 3A3 before halting.","p1c":"The program performs 8 memory reads and 1 memory write. Of the 8 reads, 5 are instruction fetches and 3 are operand reads from the LOAD and two ADD instructions. The single memory write occurs when the STORE instruction saves the result at address 3A3.","p1d":"The PC increments during fetch so it already points to the next instruction while the current instruction is executing. This allows the processor to continue sequentially without updating the PC after execution. However, a branch or jump instruction can replace the PC's value with a different address before the next fetch.","p1e":"The machine can support 2^6 = 64 different opcodes because the opcode field contains 6 bits. The 18-bit address field allows each instruction to directly reference 2^18 = 262,144 memory words, with addresses ranging from 0 to 262,143.","p2a":"Each loop takes 6 ms of computing and 4 ms of waiting, for a total of 10 ms. Since the program runs 12 times, the total execution time is 12 x 10 = 120 ms. The processor spends 12 x 4 = 48 ms waiting, which is (48 / 120) x 100 = 40% of the total time.","p2b":"With interrupt driven I/O, the time between print starts is 6 + 0.5 = 6.5 ms. The first print starts after 6 ms, so the 12th print starts at 6 + (11 x 6.5) = 77.5 ms. Adding the final 4 ms of printing and 0.5 ms for the interrupt gives a total execution time of 82 ms.","p2c":"The time between print starts is 9 + 0.5 = 9.5 ms. Since the professor computes for 6 ms while the printer takes 9 ms, it sits idle for 9 - 6 = 3 ms during a typical loop. The total execution time is 6 + (11 x 9.5) + 9 + 0.5 = 120 ms. With programmed I/O, the total would be 12 x (6 + 9) = 180 ms, so interrupt driven I/O saves 60 ms.","p2d":"The technique is multiprogramming, which allows the operating systems to run another program while the current program is waiting for I/O. In this situation, the processor could use the 3 ms of idle time to work on another program instead of sitting idle while the printer finishes. Once the printer sends its interrupt, the operating system can handle it and resume the original program when appropriate.","p3a":"The average access time is calculated using 2 + (1 - hit ratio) × 50.\n- At a hit ratio of 0.80: 2 + (0.20 × 50) = 12 ns.\n- At a hit ratio of 0.95: 2 + (0.05 × 50) = 4.5 ns.\n- At a hit ratio of 0.99: 2 + (0.01 × 50) = 2.5 ns.\nAs the cache hit ratio increases, the average access time decreases because the processor needs to access main memory less often.","p3b":"Using the average access time formula, 3 = 2 + (1 - h) x 50. Subtracting 2 gives 1 = 50(1 - h), and dividing by 50 gives 0.02 = 1 - h. Solving for h gives 0.98, so the minimum cache hit ratio needed to reach an average access time of 3 ns is 98%.","p3c":"The L1 cache has a 90% hit rate, leaving 10% of requests to check L2. Of those requests, 75% are found in L2 and the remaining 25% require main memory. The average access time is (0.90 x 1) + (0.10 x 0.75 x 9) + (0.10 x 0.25 x 69) = 0.90 + 0.675 + 1.725 = 3.3 ns. Without the L2 cache, the average access time would be 1 + (0.10 x 60) = 7 ns. Comparing the two systems, 7 / 3.3 ≈ 2.12, so the version with L2 is approximately 2.12 times faster.","p3d":"The property is locality of reference, which includes temporal locality and spatial locality. Temporal locality means a program is likely to access the same memory location again soon, such as repeatedly using a variable inside a loop. Spatial locality means a program is likely to access nearby memory locations, such as when reading elements of an array in order. These patterns allow a small cache to maintain a high hit ratio.","p4a":"The world field requires 3 bits because each block contains 8 words (2^3 = 8). The slot field requires 5 bits because the cache has 32 slots (2^5 = 32). Since memory addresses are 16 bits long, the remaining 16 - 3 -5 = 8 bits are used for the tag field. This gives a total of 8 tag bits, 5 slot bits, and 3 word bits.","p4b":[["0","20","4","Miss"],["7","20 ","4","Hit"],["2","20","20","Miss"],["1","20","4","Miss"],["3","20","20","Miss"]],"p4c":"Under direct mapping, only 1 of the 5 reads is a cache hit because both memory blocks map to slot 20 and keep replacing each other. Under fully associative mapping with LRU, 3 of the 5 reads are hits because the two blocks can be stored in different cache slots. Since the cache has enough space for both blocks, no replacement is necessary.","p4d":"Under write-through, main memory is written 400 times because both words are updated 200 times each, and every update is written immediately. Under write-back, main memory is written only once when the modified block is evicted. If a DMA module reads the block directly from main memory before the write-back occurs, it receives outdated data because the latest changes are still only in the cache. This creates a cache coherence problem since the DMA module does not receive the most recent values.","p5a":"With programmed I/O, the processor waits for each word and transfers it into main memory itself. Since there are 4,096 words and each takes 2 µs, the total processor time is 4,096 x 2 = 8,192 µs (8.192 ms). The processor is occupied for the entire transfer.","p5b":"With interrupt-driven I/O, each of the 4,096 words causes one interrupt that takes 0.6 µs of processor time. The total processor time is 4,096 x 0.6 = 2,457.6 µs. The percentage of the total transfer time is (2,457.6 / 8,192) x 100 = 30%. This means the processor spends 30% of the transfer time handling interrupts and can use the remaining time for other work.","p5c":"With DMA, the processor spends 10 µs setting up the transfer and 5 µs handling the completion interrupt, for a total of 15 µs of processor time. Cycle stealing can delay the processor by up to 4,096 × 0.05 = 204.8 µs if the processor needs the memory bus during every transfer. A stolen cycle is different from an interrupt because it only temporarily delays the processor's access to the memory bus, while an interrupt requires the processor to stop its current execution and run an interrupt handler.","p5d":"Keyboard on a laptop — Interrupt-driven I/O: The keyboard sends an interrupt when input is available, allowing the processor to perform other tasks instead of constantly checking for key presses.\n\nCopying a 4 GB video file from an SSD — DMA: DMA is best for large transfers because it moves data directly between the device and main memory with minimal processor involvement.\n\nToaster's temperature sensor — Programmed I/O: The processor has no other work to do, so it can simply check the sensor repeatedly without needing interrupts or DMA.","p6a":"Using the formula U = 1 - 0.75^n:\n\nn = 1: U = 1 - 0.75 = 25.00%\nn = 2: U = 1 - 0.75² = 43.75%\nn = 4: U = 1 - 0.75⁴ = 68.36%\n\nTo reach at least 90% utilization:\n\n1 - 0.75^n ≥ 0.90\n\n0.75^n ≤ 0.10\n\nn ≥ ln(0.10) / ln(0.75) ≈ 8.0039\n\nSince n must be a whole number, the minimum is 9 programs.\n\nChecking both values:\n\nn = 8: U = 1 - 0.75⁸ = 89.99%\nn = 9: U = 1 - 0.75⁹ = 92.49%\n\nTherefore, 9 programs are needed to reach at least 90% processor utilization.","p6b-work":"Total CPU time = (6 × 0.60) + (12 × 0.10) + (9 × 0.20) = 6.6 minutes.\n\nUniprogramming:\n- Elapsed time = 6 + 12 + 9 = 27 minutes.\n- Mean response time = (6 + 18 + 27) / 3 = 17 minutes.\n- Throughput = (3 / 27) × 60 = 6.67 jobs/hour.\n- Processor utilization = (6.6 / 27) × 100 = 24.44%.\n\nMultiprogramming:\n- Elapsed time = 12 minutes because all three jobs run concurrently without slowing each other down.\n- Mean response time = (6 + 12 + 9) / 3 = 9 minutes.\n- Throughput = (3 / 12) × 60 = 15 jobs/hour.\n- Processor utilization = (6.6 / 12) × 100 = 55.00%.","p6b":[["27 minutes","17 minutes","6.67","24.44%"],["12 minutes","9 minutes","15","55.00%"]],"p6c":"1. Interrupts: Interrupts allow the operating system to respond when an I/O operation finishes, so the processor can work on another program instead of waiting.\n\n2. Memory protection: Memory protection prevents programs from accessing or modifying each other's memory, allowing multiple programs to remain in memory safely.","p7a":"Using the availability formula, A = MTTF / (MTTF + MTTR) = 1500 / (1500 + 5) = 1500 / 1505 ≈ 0.99667774. Multiplying by 100 gives an availability of 99.668%.","p7b":"Expected annual downtime = 8,760 × (1 - availability) = 8,760 × (1 - 1500/1505) = 8,760 × (5/1505) ≈ 29.10 hours per year.","p7c":"Using the availability formula, 0.9999 = 1500 / (1500 + MTTR). Rearranging gives MTTR = (1500 / 0.9999) - 1500 ≈ 0.150015 hours. Converting to minutes gives 0.150015 × 60 ≈ 9.001 minutes. Therefore, the maximum MTTR to achieve 99.99% availability is approximately 9 minutes.","p7d":"Using the availability of one server, A = 1500 / 1505, the availability of two independent servers is:\n\nA_pair = 1 - (1 - A)^2\n\nA_pair = 1 - (1 - 1500/1505)^2\n\nA_pair = 1 - (5/1505)^2 ≈ 0.9999889626\n\nMultiplying by 100 gives 99.9989% availability. The two-server system is more reliable because the service only becomes unavailable when both servers are down at the same time.","p8a":[["Yes","A program could change the timer to prevent the OS from regaining control of the processor."],["No","Reading the clock does not change system settings and is safe for ordinary programs."],["Yes","A program could stop the processor from responding to interrupts, interfering with the OS."],["Yes","A program could change its memory limits and access protected memory."],["Yes","A program could bypass the OS and access or overwrite disk data directly."],["No","Addition is a normal operation that programs need and does not require kernel privileges."],["No","Programs need a safe way to request OS services, and the system call provides controlled access."]],"p8b":[["Serial processing","Simple batch processing introduced a resident monitor that automatically loaded and ran jobs, reducing wasted computer time."],["Simple batch processing","Mulitprogrammed batch processing allowed the processor to run another job while the current job waited for I/O."],["Mulitprogrammed batch processing","Time sharing systems allowed users to interact with their programs through terminals and receive faster responses."]],"p8c":"The same bug would not normally crash the entire microkernel system because device drivers run as separate processes in user space instead of directly inside the kernel. If the printer driver tries to overwrite memory it does not own, memory protection can stop it, so the driver may crash without bringing down the whole operating system. One disadvantage of a microkernel is the additional overhead from communication between separate processes, which can make some operations slower.","p8d":"If both cores access the shared ready queue at the same time, they could select the same process or corrupt the queue. This is a race condition and demonstrates the need for synchronization and mutual exclusion in multicore operating systems. The operating system must protect access to the shared queue using a lock or another synchronization mechanism so only one core can remove a process at a time.","ba":"self-check passed: LOAD, ADD, STORE, HALT, the interrupt stage and IRET all behave correctly","bb":"Problem 1 program, no interrupts\nstep  stage      PC    IR    AC  MAR   MBR\n   1  fetch     251  13A0  0000  250  13A0\n   2  execute   251  13A0  0019  3A0  0019\n   3  fetch     252  53A1  0019  251  53A1\n   4  execute   252  53A1  0027  3A1  000E\n   5  fetch     253  53A2  0027  252  53A2\n   6  execute   253  53A2  0020  3A2  8007\n   7  fetch     254  23A3  0020  253  23A3\n   8  execute   254  23A3  0020  3A3  0020\n   9  fetch     255  0000  0020  254  0000\n  10  execute   255  0000  0020  254  0000\nmemory reads: 8   memory writes: 1\nword 3A3 = 0020 (32)\n\nProblem 1 program, timer interrupt after instruction 2, safe handler\nstep  stage      PC    IR    AC  MAR   MBR\n   1  fetch     251  13A0  0000  250  13A0\n   2  execute   251  13A0  0019  3A0  0019\n   3  fetch     252  53A1  0019  251  53A1\n   4  execute   252  53A1  0027  3A1  000E\n   5  interrupt 100  53A1  0027  000  0252\n   6  fetch     101  2001  0027  100  2001\n   7  execute   101  2001  0027  001  0027\n   8  fetch     102  10F0  0027  101  10F0\n   9  execute   102  10F0  0000  0F0  0000\n  10  fetch     103  50F1  0000  102  50F1\n  11  execute   103  50F1  0001  0F1  0001\n  12  fetch     104  20F0  0001  103  20F0\n  13  execute   104  20F0  0001  0F0  0001\n  14  fetch     105  1001  0001  104  1001\n  15  execute   105  1001  0027  001  0027\n  16  fetch     106  F000  0027  105  F000\n  17  execute   252  F000  0027  000  0252\n  18  fetch     253  53A2  0027  252  53A2\n  19  execute   253  53A2  0020  3A2  8007\n  20  fetch     254  23A3  0020  253  23A3\n  21  execute   254  23A3  0020  3A3  0020\n  22  fetch     255  0000  0020  254  0000\n  23  execute   255  0000  0020  254  0000\nmemory reads: 18   memory writes: 4\nword 3A3 = 0020 (32)   ticks counted = 1","bc":"All 10 rows from my original Problem 1(a) table match the simulator output, so no corrections were needed. The hardest row to calculate by hand was Step 6 (Execute 3) because it involved adding a negative number stored in sign-magnitude format. I had to recognize that 8007 represented -7, add it to 39, and convert the result of 32 back to 0020.","bd":"The PC saved 252 instead of 251 because the program counter automatically advances to the next instruction during the fetch stage. Since instruction 251 had already finished executing when the interrupt occurred, the processor needed to save 252 so the program could resume without repeating an instruction.\n\nWithout interrupts, the simulator performed 8 memory reads and 1 memory write. With the interrupt, it performed 18 memory reads and 4 memory writes.\n\nExtra reads: 18 - 8 = 10\n\nExtra writes: 4 - 1 = 3\n\nTherefore, the interrupt added 10 memory reads and 3 memory writes, for a total of 13 additional memory operations.","be":"word 3A3 = 8006 (-6)   ticks counted = 1\n\nThe incorrect result occurs because the broken interrupt handler does not save and restore the accumulator. Before the interrupt, the AC contains 0027 (39). The handler loads the timer count of 0, adds 1, and leaves the AC containing 0001 (1). When the original program resumes, it adds -7 to 1 instead of 39, resulting in -6. This value is stored in memory address 3A3 as 8006 instead of 0020 (32).\n\nThe careful handler prevents this by using STORE 001 (2001) to save the original accumulator value and LOAD 001 (1001) to restore it before returning. This demonstrates that the interrupt hardware saves the program counter, while the interrupt handler is responsible for saving and restoring the registers it modifies."}}</script>
+</body>
+</html>
